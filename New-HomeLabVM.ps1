@@ -37,12 +37,12 @@ $vmcompute = Get-Service -Name "vmcompute"
 if (((Get-ChildItem -Path $ISOFileDirectory).Extension -notcontains ".iso") -and `
     ((Get-ChildItem -Path $ParentVHDDirectory).Extension -notcontains ".vhdx") -and `
     ($vmms.Status -ne "running") -and ($vmcompute.Status -ne "running")) {
-    Write-Host "Prerequisite checks failed." -ForegroundColor Red
+    Write-Host "`n!--Prerequisite checks failed.`n" -ForegroundColor Red
     Write-Host "Make sure you modify the values decalred on the Global Variables section of the script and try again." -ForegroundColor Red
     Write-Host "`nWindow will close automatically." -ForegroundColor Yellow
     Exit
 }
-Write-Host "Prerequisite checks passed." -ForegroundColor Yellow
+Write-Host "`n!--Prerequisite checks passed.`n" -ForegroundColor Green
 ##############################################################
 Write-Host "Do you want to create VM from template (VHD)?" -ForegroundColor Yellow
 $ConfirmTemplate = Read-Host "Please type [y/n]"
