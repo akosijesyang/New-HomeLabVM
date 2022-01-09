@@ -23,7 +23,7 @@ $host.ui.RawUI.WindowTitle = 'New-HomeLabVM - Create a virtual machine, FAST.' #
 ##############################################################
 ##############################################################
 #Global Variables | Modify the following variables as necessary
-$VMFilesDirectory = "D:\Hyper-V Lab Files\virtual-machines\vm-files" # Folder where VM files will be stored
+$VMFilesDirectory = "D:\Hyper-V Lab Files\virtual-machines\vm-files\Virtual Machines" # Folder where VM files will be stored
 $ParentVHDDirectory = "D:\Hyper-V Lab Files\vhd templates" # Folder where parent VHD is stored
 $VHDFileDirectory = "D:\Hyper-V Lab Files\virtual-machines\vhd-files" # Folder where new VHD files will be created
 $ISOFileDirectory = "D:\Hyper-V Lab Files\iso-files" # Folder where ISO files are stored
