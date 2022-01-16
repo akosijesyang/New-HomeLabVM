@@ -133,6 +133,7 @@ while ($ConfirmTemplate -ne "y") {
                 Add-VMDvdDrive -VMName $HomeLabVMName -Path $ISOFileDirectory\$SelectedISOFile #Adds DVD drive and then mounts ISO file
                 Get-VMIntegrationService -Name "Guest Service Interface" -VMName $HomeLabVMName | `
                     Enable-VMIntegrationService # Turns on VM integration service
+                Set-VMFirmware -VMName "$($HomeLabVMName)" -EnableSecureBoot 1 # Turns off Secure Boot (allowing non-Windows ISO to be detected)
                 Write-Host "`nWindow will close automatically." -ForegroundColor Yellow
                 Start-Sleep -Seconds "5"
             }
@@ -152,7 +153,7 @@ while ($ConfirmTemplate -ne "y") {
                 Add-VMDvdDrive -VMName $HomeLabVMNameAlt -Path $ISOFileDirectory\$SelectedISOFile # Adds DVD drive and then mounts ISO file
                 Get-VMIntegrationService -Name "Guest Service Interface" -VMName $HomeLabVMNameAlt | `
                     Enable-VMIntegrationService # Turns on VM integration service
-                Set-VMFirmware -VMName $HomeLabVMNameAlt -EnableSecureBoot 1 # Turns off Secure Boot
+                Set-VMFirmware -VMName "$($HomeLabVMNameAlt)" -EnableSecureBoot 1 # Turns off Secure Boot (allowing non-Windows ISO to be detected)
                 Write-Host "`nWindow will close automatically." -ForegroundColor Yellow
                 Start-Sleep -Seconds "5"
             }
@@ -202,7 +203,7 @@ if ($HomeLabVMName -ne "") {
         -MemoryMaximumBytes 4GB # Sets up additional VM configurations
     Get-VMIntegrationService -Name "Guest Service Interface" -VMName $HomeLabVMName | `
         Enable-VMIntegrationService # Turns on VM integration service
-    Set-VMFirmware -VMName $HomeLabVMName -EnableSecureBoot 1 # Turns off Secure Boot
+    Set-VMFirmware -VMName "$($HomeLabVMName)" -EnableSecureBoot 1 # Turns off Secure Boot (allowing non-Windows ISO to be detected)
     Write-Host "`nWindow will close automatically." -ForegroundColor Yellow
     Start-Sleep -Seconds "5"
 }
@@ -221,7 +222,7 @@ else {
         -MemoryMaximumBytes 4GB # Sets up additional VM configurations
     Get-VMIntegrationService -Name "Guest Service Interface" -VMName $HomeLabVMNameAlt | `
         Enable-VMIntegrationService # Turns on VM integration service
-    Set-VMFirmware -VMName $HomeLabVMNameAlt -EnableSecureBoot 1 # Turns off Secure Boot
+    Set-VMFirmware -VMName "$($HomeLabVMNameAlt)" -EnableSecureBoot 1 # Turns off Secure Boot (allowing non-Windows ISO to be detected)
     Write-Host "`nWindow will close automatically" -ForegroundColor Yellow
     Start-Sleep -Seconds "5"
 }
