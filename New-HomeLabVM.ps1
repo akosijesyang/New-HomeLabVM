@@ -96,6 +96,7 @@ while ($ConfirmTemplate -ne "y") {
                 Add-VMDvdDrive -VMName $HomeLabVMName -Path $ISOFileDirectory\$SelectedISOFile #Adds DVD drive and then mounts ISO file
                 Get-VMIntegrationService -Name "Guest Service Interface" -VMName $HomeLabVMName | `
                     Enable-VMIntegrationService # Turns on VM integration service
+                Set-VMBios -VMName "$($HomeLabVMName)" -StartupOrder @("CD", "IDE", "LegacyNetworkAdapter", "Floppy") # Sets ISO as first boot device
                 Write-Host "`nWindow will close automatically." -ForegroundColor Yellow
                 Start-Sleep -Seconds "5"
             }
@@ -114,6 +115,7 @@ while ($ConfirmTemplate -ne "y") {
                 Add-VMDvdDrive -VMName $HomeLabVMNameAlt -Path $ISOFileDirectory\$SelectedISOFile # Adds DVD drive and then mounts ISO file
                 Get-VMIntegrationService -Name "Guest Service Interface" -VMName $HomeLabVMNameAlt | `
                     Enable-VMIntegrationService # Turns on VM integration service
+                Set-VMBios -VMName "$($HomeLabVMNameAlt)" -StartupOrder @("CD", "IDE", "LegacyNetworkAdapter", "Floppy") # Sets ISO as first boot device
                 Write-Host "`nWindow will close automatically." -ForegroundColor Yellow
                 Start-Sleep -Seconds "5"
             }
@@ -134,6 +136,12 @@ while ($ConfirmTemplate -ne "y") {
                 Get-VMIntegrationService -Name "Guest Service Interface" -VMName $HomeLabVMName | `
                     Enable-VMIntegrationService # Turns on VM integration service
                 Set-VMFirmware -VMName "$($HomeLabVMName)" -EnableSecureBoot 1 # Turns off Secure Boot (allowing non-Windows ISO to be detected)
+                $InspectBootOrder = Get-VMFirmware -VMName "$($HomeLabVMName)"
+                $InspectBootOrder.BootOrder
+                $HddDrive = $InspectBootOrder.BootOrder[0]
+                $NetAdapter = $InspectBootOrder.BootOrder[1]
+                $DvdDrive = $InspectBootOrder.BootOrder[2]
+                Set-VMFirmware -VMName "$($HomeLabVMName)"-BootOrder $DvdDrive,$HddDrive,$NetAdapter # Sets ISO/DVD as first boot device
                 Write-Host "`nWindow will close automatically." -ForegroundColor Yellow
                 Start-Sleep -Seconds "5"
             }
@@ -154,6 +162,12 @@ while ($ConfirmTemplate -ne "y") {
                 Get-VMIntegrationService -Name "Guest Service Interface" -VMName $HomeLabVMNameAlt | `
                     Enable-VMIntegrationService # Turns on VM integration service
                 Set-VMFirmware -VMName "$($HomeLabVMNameAlt)" -EnableSecureBoot 1 # Turns off Secure Boot (allowing non-Windows ISO to be detected)
+                $InspectBootOrder = Get-VMFirmware -VMName "$($HomeLabVMNameAlt)"
+                $InspectBootOrder.BootOrder
+                $HddDrive = $InspectBootOrder.BootOrder[0]
+                $NetAdapter = $InspectBootOrder.BootOrder[1]
+                $DvdDrive = $InspectBootOrder.BootOrder[2]
+                Set-VMFirmware -VMName "$($HomeLabVMNameAlt)" -BootOrder $DvdDrive,$HddDrive,$NetAdapter # Sets ISO/DVD as first boot device
                 Write-Host "`nWindow will close automatically." -ForegroundColor Yellow
                 Start-Sleep -Seconds "5"
             }
