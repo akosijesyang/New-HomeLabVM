@@ -160,7 +160,7 @@ switch ($VMOption) {
         exit
     }
     '3' {
-        Write-Host "`nWindows VM will be created (Dynamic Memory, Gen2, with Secure Boot, TPM, etc.)" -ForegroundColor Green
+        Write-Host "`nWindows VM will be created (Dynamic Memory, GEN-2, with Secure Boot, TPM, etc.)" -ForegroundColor Green
         Start-Sleep 2
         $ArrayIndex = 0
         $ISOFile = Get-ChildItem -Path $ISOFileDirectory | Where-Object Name -Like "*.iso" | `
@@ -181,34 +181,37 @@ switch ($VMOption) {
             Write-Host ""
             Write-Host "You selected $($ISOFile.Name[$SelectArrayIndex])" -ForegroundColor Green
             break
-            $inputName = Read-Host "`nEnter Windows 11 VM name"
-            $vmName = if ($inputName.Trim()) { $inputName.Trim() } else { "Win11VM-$(Get-Date -Format yyyyMMddTHHmmss)" }
-            if (-not $inputName.Trim()) {
-                Write-Host "`nYou skipped VM name input - Your new VM will be named as $vmName..." -ForegroundColor Green
-                Start-Sleep 2
-            }
-            $SelectedISOFile = $ISOFile.Name[$SelectArrayIndex]
-            $Win11VHDPath = "$VHDFileDirectory\$vmName.vhdx"
-            $Win11VMPath = "$VMFilesDirectory\$vmName"
-            New-VHD -Path $Win11VHDPath -Dynamic -SizeBytes 100GB
-            New-VM -Name $vmName -Path $Win11VMPath -Generation 2 -MemoryStartupBytes 4GB `
-                -SwitchName "$NATvSwitch" -VHDPath $Win11VHDPath
-            Set-VM -Name $vmName -ProcessorCount 4 -AutomaticCheckpointsEnabled $false -DynamicMemory `
-                -MemoryMinimumBytes 4GB -MemoryMaximumBytes 8GB
-            Add-VMDvdDrive -VMName $vmName -Path "$ISOFileDirectory\$SelectedISOFile"
-            Set-VMFirmware -VMName $vmName -EnableSecureBoot On
-            Set-VMKeyProtector -VMName $vmName -NewLocalKeyProtector
-            Enable-VMTPM -VMName $vmName
-            Add-VMDvdDrive -VMName $vmName -Path $Win11ISO.FullName
-            Get-VMIntegrationService -VMName $vmName | Enable-VMIntegrationService
-            Write-Host "`nWindows 11-ready VM created and ready for install!" -ForegroundColor Green
-            Write-Host "`nWindow will close automatically." -ForegroundColor Yellow
-            Start-Sleep 5
-            exit
         }
-        default {
-            Write-Host "Invalid selection. Exiting." -ForegroundColor Red
-            exit
+        Start-Sleep 1
+        $inputName = Read-Host "`nEnter VM name"
+        $vmName = if ($inputName.Trim()) { $inputName.Trim() } else { "VM-$(Get-Date -Format yyyyMMddTHHmmss)" }
+        if (-not $inputName.Trim()) {
+            Write-Host "You skipped VM name input - Your new VM will be named as $vmName..." -ForegroundColor Green
+            Start-Sleep 2
         }
+        $SelectedISOFile = $ISOFile.Name[$SelectArrayIndex]
+        Write-Host "`nGen-2 Virtual Machine will be created (with dynamic memory)" -ForegroundColor Green
+        New-VHD -Path "$VHDFileDirectory\$vmName.vhdx" -Dynamic -SizeBytes 100GB
+        New-VM -Name $vmName -Path "$VMFilesDirectory\$vmName" -Generation 2 -MemoryStartupBytes 1GB `
+            -SwitchName "$NATvSwitch" -VHDPath "$VHDFileDirectory\$vmName.vhdx"
+        Set-VM -Name $vmName -ProcessorCount 4 -AutomaticCheckpointsEnabled $false -DynamicMemory -MemoryMaximumBytes 4GB
+        Add-VMDvdDrive -VMName $vmName -Path "$ISOFileDirectory\$SelectedISOFile"
+        Set-VMFirmware -VMName $vmName -EnableSecureBoot On
+        Set-VMKeyProtector -VMName $vmName -NewLocalKeyProtector
+        Enable-VMTPM -VMName $vmName
+        Get-VMIntegrationService -Name "Guest Service Interface" -VMName $vmName | Enable-VMIntegrationService
+        Set-VMFirmware -VMName $vmName -EnableSecureBoot 1
+        $InspectBootOrder = Get-VMFirmware -VMName $vmName
+        $HddDrive = $InspectBootOrder.BootOrder[0]
+        $NetAdapter = $InspectBootOrder.BootOrder[1]
+        $DvdDrive = $InspectBootOrder.BootOrder[2]
+        Set-VMFirmware -VMName $vmName -BootOrder $DvdDrive, $HddDrive, $NetAdapter
+        Write-Host "`nWindow will close automatically." -ForegroundColor Yellow
+        Start-Sleep 5
+        exit
+    }
+    default {
+        Write-Host "Invalid selection. Exiting." -ForegroundColor Red
+        exit
     }
 }
