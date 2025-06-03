@@ -211,3 +211,4 @@ switch ($VMOption) {
             exit
         }
     }
+}
