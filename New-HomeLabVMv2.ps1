@@ -54,9 +54,9 @@ Write-Host "[3] Windows 11 VM (with TPM, Secure Boot, etc.)"
 #$VMOption = Read-Host "Type 1, 2, or 3"
 
 do {
-    $VMOption = Read-Host "Type 1, 2, or 3"
+    $VMOption = Read-Host "`nType 1, 2, or 3"
     if ($VMOption -notin @('1','2','3')) {
-        Write-Host "Invalid selection. Please enter 1, 2, or 3." -ForegroundColor Red
+        Write-Host "`nInvalid selection! Please enter 1, 2, or 3." -ForegroundColor Red
     }
 } while ($VMOption -notin @('1','2','3'))
 
