@@ -51,7 +51,7 @@ Write-Host "Select VM creation method:" -ForegroundColor Yellow
 Write-Host "1. From template (VHD / VHDX)"
 Write-Host "2. From Image File (ISO)"
 Write-Host "3. Windows 11 VM (with TPM, Secure Boot, etc.)"
-$VMOption = Read-Host "Type 1, 2, or 3"
+#$VMOption = Read-Host "Type 1, 2, or 3"
 
 do {
     $VMOption = Read-Host "Type 1, 2, or 3"
