@@ -55,80 +55,80 @@ Write-Host "[3] Windows 11 VM (with TPM, Secure Boot, etc.)"
 
 do {
     $VMOption = Read-Host "`nType 1, 2, or 3"
-    if ($VMOption -notin @('1','2','3')) {
+    if ($VMOption -notin @('1', '2', '3')) {
         Write-Host "`nInvalid selection! Please enter 1, 2, or 3." -ForegroundColor Red
     }
-} while ($VMOption -notin @('1','2','3'))
+} while ($VMOption -notin @('1', '2', '3'))
 
 switch ($VMOption) {
     '1' {
         # Existing logic for template (VHD)
         Write-Host "`nNew VM will use a VHD template..." -ForegroundColor Yellow
-$ArrayIndex = 0 # Equivalent to the index value to each line in the array
-$ParentVHDFile = Get-ChildItem -Path $ParentVHDDirectory | Where-Object -Property Name -Like "*.vhdx" | `
-    Select-Object -Property Name, @{ Name = "ID" ; Expression = { $script:ArrayIndex; $script:ArrayIndex++ } }
-$ParentVHDFileIndex = $ParentVHDFile.Count - 1
-Write-Host "`nParent VHD file selection:" -ForegroundColor Green
-$ParentVHDFile | Format-Table
-While ($true) {
-    $SelectArrayIndex = Read-Host "`nSelect an ID between 0 and $ParentVHDFileIndex"
-    if ($SelectArrayIndex -notmatch "^\d+$") {
-        Write-Host "Invalid ID. Try Again" -ForegroundColor Red
-        Start-Sleep 2
+        $ArrayIndex = 0 # Equivalent to the index value to each line in the array
+        $ParentVHDFile = Get-ChildItem -Path $ParentVHDDirectory | Where-Object -Property Name -Like "*.vhdx" | `
+            Select-Object -Property Name, @{ Name = "ID" ; Expression = { $script:ArrayIndex; $script:ArrayIndex++ } }
+        $ParentVHDFileIndex = $ParentVHDFile.Count - 1
         Write-Host "`nParent VHD file selection:" -ForegroundColor Green
         $ParentVHDFile | Format-Table
-        continue
-    }
-    $SelectArrayIndex = [int]$SelectArrayIndex  # Ensures only integer value is accepted
-    if ($SelectArrayIndex -le $ParentVHDFileIndex) {
-        Write-Host ""
-        Write-Host You selected $ParentVHDFile.Name[$SelectArrayIndex]... -ForegroundColor Green
-        break
-    }
-    Write-Host "Invalid ID. Try Again" -ForegroundColor Red
-    Start-Sleep 2
-    Write-Host "`nParent VHD file selection:" -ForegroundColor Green
-    $ParentVHDFile | Format-Table
-}
-# Create VM from parent VHD
-$HomeLabVMName = Read-Host "`nEnter VM name" -ErrorAction Ignore #Asks the user to type in the VM name
-$HomeLabVMName = $HomeLabVMName.Trim() # Removes any space/s on the begining/end of VM name
-if ($HomeLabVMName -ne "") {
-    # Template-VHD 1: VM name defined by user | Creates VM | Creates VHD | Config VM settings
-    $SelectedParentVHDFile = $ParentVHDFile.Name[$SelectArrayIndex] # Maps parent VHD file
-    $ParentVDH = "$ParentVHDDirectory\$SelectedParentVHDFile" # Sets parent/reference VHD
-    New-VHD -ParentPath $ParentVDH -Path "$VHDFileDirectory\$HomeLabVMName.vhdx" -Differencing # Maps new VHD to parent VHD
-    New-VM -Name $HomeLabVMName -Path "$VMFilesDirectory\$HomeLabVMName" -Generation 2 -MemoryStartupBytes 1GB `
-        -SwitchName "$NATvSwitch" -VHDPath "$VHDFileDirectory\$HomeLabVMName.vhdx"  -BootDevice "VHD" # Creates VM
-    Set-VM -Name $HomeLabVMName -ProcessorCount "4" -AutomaticCheckpointsEnabled $false -DynamicMemory `
-        -MemoryMaximumBytes 4GB # Sets up additional VM configurations
-    Get-VMIntegrationService -Name "Guest Service Interface" -VMName $HomeLabVMName | `
-        Enable-VMIntegrationService # Turns on VM integration service
-    Set-VMFirmware -VMName "$($HomeLabVMName)" -EnableSecureBoot 1 # Turns off Secure Boot (allowing non-Windows ISO to be detected)
-    Write-Host "`nWindow will close automatically." -ForegroundColor Yellow
-    Start-Sleep -Seconds "5"
-}
-else {
-    # Template-VHD Option 2: VM name prompt skipped by user | Creates VM | Creates VHD | Config VM settings
-    $NewVMTimeStamp = Get-Date -Format yyyyMMddTHHmmss # Captures point-in-time
-    $HomeLabVMNameAlt = "VM-$NewVMTimeStamp" # Sets VM name based on timestamp
-    Write-Host "You skipped VM name input - Your new VM will named as $HomeLabVMNameAlt..." -ForegroundColor Yellow
-    Start-Sleep 2
-    $SelectedParentVHDFile = $ParentVHDFile.Name[$SelectArrayIndex] # Maps parent VHD file
-    $ParentVDH = "$ParentVHDDirectory\$SelectedParentVHDFile" # Sets parent/reference VHD
-    New-VHD -ParentPath $ParentVDH -Path "$VHDFileDirectory\$HomeLabVMNameAlt.vhdx" -Differencing # Maps new VHD to parent VHD
-    New-VM -Name $HomeLabVMNameAlt -Path "$VMFilesDirectory\$HomeLabVMNameAlt" -Generation 2 -MemoryStartupBytes 1GB `
-        -SwitchName "$NATvSwitch" -VHDPath "$VHDFileDirectory\$HomeLabVMNameAlt.vhdx" -BootDevice "VHD" # Creates VM
-    Set-VM -Name $HomeLabVMNameAlt -ProcessorCount "4" -AutomaticCheckpointsEnabled $false -DynamicMemory `
-        -MemoryMaximumBytes 4GB # Sets up additional VM configurations
-    Get-VMIntegrationService -Name "Guest Service Interface" -VMName $HomeLabVMNameAlt | `
-        Enable-VMIntegrationService # Turns on VM integration service
-    Set-VMFirmware -VMName "$($HomeLabVMNameAlt)" -EnableSecureBoot 1 # Turns off Secure Boot (allowing non-Windows ISO to be detected)
-    Write-Host "`nWindow will close automatically" -ForegroundColor Yellow
-    Start-Sleep -Seconds "5"
-}
-Clear-History
-# Nothing follows
+        While ($true) {
+            $SelectArrayIndex = Read-Host "`nSelect an ID between 0 and $ParentVHDFileIndex"
+            if ($SelectArrayIndex -notmatch "^\d+$") {
+                Write-Host "Invalid ID. Try Again" -ForegroundColor Red
+                Start-Sleep 2
+                Write-Host "`nParent VHD file selection:" -ForegroundColor Green
+                $ParentVHDFile | Format-Table
+                continue
+            }
+            $SelectArrayIndex = [int]$SelectArrayIndex  # Ensures only integer value is accepted
+            if ($SelectArrayIndex -le $ParentVHDFileIndex) {
+                Write-Host ""
+                Write-Host You selected $ParentVHDFile.Name[$SelectArrayIndex]... -ForegroundColor Green
+                break
+            }
+            Write-Host "Invalid ID. Try Again" -ForegroundColor Red
+            Start-Sleep 2
+            Write-Host "`nParent VHD file selection:" -ForegroundColor Green
+            $ParentVHDFile | Format-Table
+        }
+        # Create VM from parent VHD
+        $HomeLabVMName = Read-Host "`nEnter VM name" -ErrorAction Ignore #Asks the user to type in the VM name
+        $HomeLabVMName = $HomeLabVMName.Trim() # Removes any space/s on the begining/end of VM name
+        if ($HomeLabVMName -ne "") {
+            # Template-VHD 1: VM name defined by user | Creates VM | Creates VHD | Config VM settings
+            $SelectedParentVHDFile = $ParentVHDFile.Name[$SelectArrayIndex] # Maps parent VHD file
+            $ParentVDH = "$ParentVHDDirectory\$SelectedParentVHDFile" # Sets parent/reference VHD
+            New-VHD -ParentPath $ParentVDH -Path "$VHDFileDirectory\$HomeLabVMName.vhdx" -Differencing # Maps new VHD to parent VHD
+            New-VM -Name $HomeLabVMName -Path "$VMFilesDirectory\$HomeLabVMName" -Generation 2 -MemoryStartupBytes 1GB `
+                -SwitchName "$NATvSwitch" -VHDPath "$VHDFileDirectory\$HomeLabVMName.vhdx"  -BootDevice "VHD" # Creates VM
+            Set-VM -Name $HomeLabVMName -ProcessorCount "4" -AutomaticCheckpointsEnabled $false -DynamicMemory `
+                -MemoryMaximumBytes 4GB # Sets up additional VM configurations
+            Get-VMIntegrationService -Name "Guest Service Interface" -VMName $HomeLabVMName | `
+                Enable-VMIntegrationService # Turns on VM integration service
+            Set-VMFirmware -VMName "$($HomeLabVMName)" -EnableSecureBoot 1 # Turns off Secure Boot (allowing non-Windows ISO to be detected)
+            Write-Host "`nWindow will close automatically." -ForegroundColor Yellow
+            Start-Sleep -Seconds "5"
+        }
+        else {
+            # Template-VHD Option 2: VM name prompt skipped by user | Creates VM | Creates VHD | Config VM settings
+            $NewVMTimeStamp = Get-Date -Format yyyyMMddTHHmmss # Captures point-in-time
+            $HomeLabVMNameAlt = "VM-$NewVMTimeStamp" # Sets VM name based on timestamp
+            Write-Host "You skipped VM name input - Your new VM will named as $HomeLabVMNameAlt..." -ForegroundColor Yellow
+            Start-Sleep 2
+            $SelectedParentVHDFile = $ParentVHDFile.Name[$SelectArrayIndex] # Maps parent VHD file
+            $ParentVDH = "$ParentVHDDirectory\$SelectedParentVHDFile" # Sets parent/reference VHD
+            New-VHD -ParentPath $ParentVDH -Path "$VHDFileDirectory\$HomeLabVMNameAlt.vhdx" -Differencing # Maps new VHD to parent VHD
+            New-VM -Name $HomeLabVMNameAlt -Path "$VMFilesDirectory\$HomeLabVMNameAlt" -Generation 2 -MemoryStartupBytes 1GB `
+                -SwitchName "$NATvSwitch" -VHDPath "$VHDFileDirectory\$HomeLabVMNameAlt.vhdx" -BootDevice "VHD" # Creates VM
+            Set-VM -Name $HomeLabVMNameAlt -ProcessorCount "4" -AutomaticCheckpointsEnabled $false -DynamicMemory `
+                -MemoryMaximumBytes 4GB # Sets up additional VM configurations
+            Get-VMIntegrationService -Name "Guest Service Interface" -VMName $HomeLabVMNameAlt | `
+                Enable-VMIntegrationService # Turns on VM integration service
+            Set-VMFirmware -VMName "$($HomeLabVMNameAlt)" -EnableSecureBoot 1 # Turns off Secure Boot (allowing non-Windows ISO to be detected)
+            Write-Host "`nWindow will close automatically" -ForegroundColor Yellow
+            Start-Sleep -Seconds "5"
+        }
+        Clear-History
+        # Nothing follows
         # ...existing code for template VHD...
     }
     '2' {
@@ -226,7 +226,7 @@ Clear-History
                 $HddDrive = $InspectBootOrder.BootOrder[0]
                 $NetAdapter = $InspectBootOrder.BootOrder[1]
                 $DvdDrive = $InspectBootOrder.BootOrder[2]
-                Set-VMFirmware -VMName "$($HomeLabVMName)"-BootOrder $DvdDrive,$HddDrive,$NetAdapter # Sets ISO/DVD as first boot device
+                Set-VMFirmware -VMName "$($HomeLabVMName)"-BootOrder $DvdDrive, $HddDrive, $NetAdapter # Sets ISO/DVD as first boot device
                 Write-Host "`nWindow will close automatically." -ForegroundColor Yellow
                 Start-Sleep -Seconds "5"
             }
@@ -252,7 +252,7 @@ Clear-History
                 $HddDrive = $InspectBootOrder.BootOrder[0]
                 $NetAdapter = $InspectBootOrder.BootOrder[1]
                 $DvdDrive = $InspectBootOrder.BootOrder[2]
-                Set-VMFirmware -VMName "$($HomeLabVMNameAlt)" -BootOrder $DvdDrive,$HddDrive,$NetAdapter # Sets ISO/DVD as first boot device
+                Set-VMFirmware -VMName "$($HomeLabVMNameAlt)" -BootOrder $DvdDrive, $HddDrive, $NetAdapter # Sets ISO/DVD as first boot device
                 Write-Host "`nWindow will close automatically." -ForegroundColor Yellow
                 Start-Sleep -Seconds "5"
             }
@@ -261,39 +261,39 @@ Clear-History
         # ...existing code for ISO...
     }
     '3' {
-            Write-Host "`nWindows 11 VM will be created (Gen2, Secure Boot, TPM, 4 CPUs, 4GB RAM min)" -ForegroundColor Green
-    $Win11VMName = Read-Host "`nEnter Windows 11 VM name"
-    $Win11VMName = $Win11VMName.Trim()
-    if ($Win11VMName -eq "") {
-        $NewVMTimeStamp = Get-Date -Format yyyyMMddTHHmmss
-        $Win11VMName = "Win11VM-$NewVMTimeStamp"
-        Write-Host "`nYou skipped VM name input - Your new VM will be named as $Win11VMName..." -ForegroundColor Green
-        Start-Sleep 2
-    }
-    $Win11VHDPath = "$VHDFileDirectory\$Win11VMName.vhdx"
-    $Win11VMPath = "$VMFilesDirectory\$Win11VMName"
-    $Win11ISO = Get-ChildItem -Path $ISOFileDirectory | Where-Object { $_.Name -like "*.iso" } | Select-Object -First 1
-    if (-not $Win11ISO) {
-        Write-Host "No ISO found in $ISOFileDirectory" -ForegroundColor Red
+        Write-Host "`nWindows 11 VM will be created (Gen2, Secure Boot, TPM, 4 CPUs, 4GB RAM min)" -ForegroundColor Green
+        $Win11VMName = Read-Host "`nEnter Windows 11 VM name"
+        $Win11VMName = $Win11VMName.Trim()
+        if ($Win11VMName -eq "") {
+            $NewVMTimeStamp = Get-Date -Format yyyyMMddTHHmmss
+            $Win11VMName = "Win11VM-$NewVMTimeStamp"
+            Write-Host "`nYou skipped VM name input - Your new VM will be named as $Win11VMName..." -ForegroundColor Green
+            Start-Sleep 2
+        }
+        $Win11VHDPath = "$VHDFileDirectory\$Win11VMName.vhdx"
+        $Win11VMPath = "$VMFilesDirectory\$Win11VMName"
+        $Win11ISO = Get-ChildItem -Path $ISOFileDirectory | Where-Object { $_.Name -like "*.iso" } | Select-Object -First 1
+        if (-not $Win11ISO) {
+            Write-Host "No ISO found in $ISOFileDirectory" -ForegroundColor Red
+            exit
+        }
+        # Create VHD
+        New-VHD -Path $Win11VHDPath -Dynamic -SizeBytes 100GB
+        # Create VM
+        New-VM -Name $Win11VMName -Path $Win11VMPath -Generation 2 -MemoryStartupBytes 4GB `
+            -SwitchName "$NATvSwitch" -VHDPath $Win11VHDPath
+        # Configure VM
+        Set-VM -Name $Win11VMName -ProcessorCount 4 -AutomaticCheckpointsEnabled $false -DynamicMemory `
+            -MemoryMinimumBytes 4GB -MemoryMaximumBytes 8GB
+        Set-VMFirmware -VMName $Win11VMName -EnableSecureBoot On
+        Set-VMKeyProtector -VMName $Win11VMName -NewLocalKeyProtector
+        Enable-VMTPM -VMName $Win11VMName
+        Add-VMDvdDrive -VMName $Win11VMName -Path $Win11ISO.FullName
+        Get-VMIntegrationService -VMName $Win11VMName | Enable-VMIntegrationService
+        Write-Host "`nWindows 11 VM created and ready for install!" -ForegroundColor Green
+        Write-Host "`nWindow will close automatically." -ForegroundColor Yellow
+        Start-Sleep -Seconds 5
         exit
-    }
-    # Create VHD
-    New-VHD -Path $Win11VHDPath -Dynamic -SizeBytes 100GB
-    # Create VM
-    New-VM -Name $Win11VMName -Path $Win11VMPath -Generation 2 -MemoryStartupBytes 4GB `
-        -SwitchName "$NATvSwitch" -VHDPath $Win11VHDPath
-    # Configure VM
-    Set-VM -Name $Win11VMName -ProcessorCount 4 -AutomaticCheckpointsEnabled $false -DynamicMemory `
-        -MemoryMinimumBytes 4GB -MemoryMaximumBytes 8GB
-    Set-VMFirmware -VMName $Win11VMName -EnableSecureBoot On
-    Set-VMKeyProtector -VMName $Win11VMName -NewLocalKeyProtector
-    Enable-VMTPM -VMName $Win11VMName
-    Add-VMDvdDrive -VMName $Win11VMName -Path $Win11ISO.FullName
-    Get-VMIntegrationService -VMName $Win11VMName | Enable-VMIntegrationService
-    Write-Host "`nWindows 11 VM created and ready for install!" -ForegroundColor Green
-    Write-Host "`nWindow will close automatically." -ForegroundColor Yellow
-    Start-Sleep -Seconds 5
-    exit
     }
     default {
         Write-Host "Invalid selection. Exiting." -ForegroundColor Red
