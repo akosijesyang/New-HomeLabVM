@@ -47,7 +47,7 @@ Write-Host "`n!--Prerequisite checks passed.`n" -ForegroundColor Green
 Write-Host "Select VM creation method:" -ForegroundColor Yellow
 Write-Host "[1] From template (VHD / VHDX)"
 Write-Host "[2] From Image File (ISO)"
-Write-Host "[3] Windows 11 VM (with TPM, Secure Boot, etc.)"
+Write-Host "[3] From Image File (VM with TPM, Secure Boot, etc.) - For creating Windows 11 VM"
 
 do {
     $VMOption = Read-Host "`nType 1, 2, or 3"
@@ -139,7 +139,8 @@ switch ($VMOption) {
             Add-VMDvdDrive -VMName $vmName -Path "$ISOFileDirectory\$SelectedISOFile"
             Get-VMIntegrationService -Name "Guest Service Interface" -VMName $vmName | Enable-VMIntegrationService
             Set-VMBios -VMName $vmName -StartupOrder @("CD", "IDE", "LegacyNetworkAdapter", "Floppy")
-        } else {
+        }
+        else {
             Write-Host "`nGen-2 Virtual Machine will be created (with dynamic memory)" -ForegroundColor Green
             New-VHD -Path "$VHDFileDirectory\$vmName.vhdx" -Dynamic -SizeBytes 100GB
             New-VM -Name $vmName -Path "$VMFilesDirectory\$vmName" -Generation 2 -MemoryStartupBytes 1GB `
@@ -159,37 +160,54 @@ switch ($VMOption) {
         exit
     }
     '3' {
-        Write-Host "`nWindows 11 VM will be created (Gen2, Secure Boot, TPM, 4 CPUs, 4GB RAM min)" -ForegroundColor Green
-        $inputName = Read-Host "`nEnter Windows 11 VM name"
-        $vmName = if ($inputName.Trim()) { $inputName.Trim() } else { "Win11VM-$(Get-Date -Format yyyyMMddTHHmmss)" }
-        if (-not $inputName.Trim()) {
-            Write-Host "`nYou skipped VM name input - Your new VM will be named as $vmName..." -ForegroundColor Green
-            Start-Sleep 2
-        }
-        $Win11VHDPath = "$VHDFileDirectory\$vmName.vhdx"
-        $Win11VMPath = "$VMFilesDirectory\$vmName"
-        $Win11ISO = Get-ChildItem -Path $ISOFileDirectory | Where-Object { $_.Name -like "*.iso" } | Select-Object -First 1
-        if (-not $Win11ISO) {
-            Write-Host "No ISO found in $ISOFileDirectory" -ForegroundColor Red
+        Write-Host "`nWindows VM will be created (Dynamic Memory, Gen2, with Secure Boot, TPM, etc.)" -ForegroundColor Green
+        Start-Sleep 2
+        $ArrayIndex = 0
+        $ISOFile = Get-ChildItem -Path $ISOFileDirectory | Where-Object Name -Like "*.iso" | `
+            Select-Object Name, @{ Name = "ID" ; Expression = { $script:ArrayIndex; $script:ArrayIndex++ } }
+        $ISOFileIndex = $ISOFile.Count - 1
+        Write-Host "`nISO file selection:" -ForegroundColor Green
+        $ISOFile | Format-Table
+        while ($true) {
+            $SelectArrayIndex = Read-Host "`nSelect an ID between 0 and $ISOFileIndex"
+            if ($SelectArrayIndex -notmatch "^\d+$" -or [int]$SelectArrayIndex -gt $ISOFileIndex) {
+                Write-Host "Invalid ID. Try Again" -ForegroundColor Red
+                Start-Sleep 2
+                Write-Host "`nISO file selection:" -ForegroundColor Green
+                $ISOFile | Format-Table
+                continue
+            }
+            $SelectArrayIndex = [int]$SelectArrayIndex
+            Write-Host ""
+            Write-Host "You selected $($ISOFile.Name[$SelectArrayIndex])" -ForegroundColor Green
+            break
+            $inputName = Read-Host "`nEnter Windows 11 VM name"
+            $vmName = if ($inputName.Trim()) { $inputName.Trim() } else { "Win11VM-$(Get-Date -Format yyyyMMddTHHmmss)" }
+            if (-not $inputName.Trim()) {
+                Write-Host "`nYou skipped VM name input - Your new VM will be named as $vmName..." -ForegroundColor Green
+                Start-Sleep 2
+            }
+            $SelectedISOFile = $ISOFile.Name[$SelectArrayIndex]
+            $Win11VHDPath = "$VHDFileDirectory\$vmName.vhdx"
+            $Win11VMPath = "$VMFilesDirectory\$vmName"
+            New-VHD -Path $Win11VHDPath -Dynamic -SizeBytes 100GB
+            New-VM -Name $vmName -Path $Win11VMPath -Generation 2 -MemoryStartupBytes 4GB `
+                -SwitchName "$NATvSwitch" -VHDPath $Win11VHDPath
+            Set-VM -Name $vmName -ProcessorCount 4 -AutomaticCheckpointsEnabled $false -DynamicMemory `
+                -MemoryMinimumBytes 4GB -MemoryMaximumBytes 8GB
+            Add-VMDvdDrive -VMName $vmName -Path "$ISOFileDirectory\$SelectedISOFile"
+            Set-VMFirmware -VMName $vmName -EnableSecureBoot On
+            Set-VMKeyProtector -VMName $vmName -NewLocalKeyProtector
+            Enable-VMTPM -VMName $vmName
+            Add-VMDvdDrive -VMName $vmName -Path $Win11ISO.FullName
+            Get-VMIntegrationService -VMName $vmName | Enable-VMIntegrationService
+            Write-Host "`nWindows 11-ready VM created and ready for install!" -ForegroundColor Green
+            Write-Host "`nWindow will close automatically." -ForegroundColor Yellow
+            Start-Sleep 5
             exit
         }
-        New-VHD -Path $Win11VHDPath -Dynamic -SizeBytes 100GB
-        New-VM -Name $vmName -Path $Win11VMPath -Generation 2 -MemoryStartupBytes 4GB `
-            -SwitchName "$NATvSwitch" -VHDPath $Win11VHDPath
-        Set-VM -Name $vmName -ProcessorCount 4 -AutomaticCheckpointsEnabled $false -DynamicMemory `
-            -MemoryMinimumBytes 4GB -MemoryMaximumBytes 8GB
-        Set-VMFirmware -VMName $vmName -EnableSecureBoot On
-        Set-VMKeyProtector -VMName $vmName -NewLocalKeyProtector
-        Enable-VMTPM -VMName $vmName
-        Add-VMDvdDrive -VMName $vmName -Path $Win11ISO.FullName
-        Get-VMIntegrationService -VMName $vmName | Enable-VMIntegrationService
-        Write-Host "`nWindows 11 VM created and ready for install!" -ForegroundColor Green
-        Write-Host "`nWindow will close automatically." -ForegroundColor Yellow
-        Start-Sleep 5
-        exit
+        default {
+            Write-Host "Invalid selection. Exiting." -ForegroundColor Red
+            exit
+        }
     }
-    default {
-        Write-Host "Invalid selection. Exiting." -ForegroundColor Red
-        exit
-    }
-}
