@@ -192,9 +192,9 @@ switch ($VMOption) {
         $SelectedISOFile = $ISOFile.Name[$SelectArrayIndex]
         Write-Host "`nGen-2 Virtual Machine will be created (with dynamic memory)" -ForegroundColor Green
         New-VHD -Path "$VHDFileDirectory\$vmName.vhdx" -Dynamic -SizeBytes 100GB
-        New-VM -Name $vmName -Path "$VMFilesDirectory\$vmName" -Generation 2 -MemoryStartupBytes 1GB `
+        New-VM -Name $vmName -Path "$VMFilesDirectory\$vmName" -Generation 2 -MemoryStartupBytes 4GB `
             -SwitchName "$NATvSwitch" -VHDPath "$VHDFileDirectory\$vmName.vhdx"
-        Set-VM -Name $vmName -ProcessorCount 4 -AutomaticCheckpointsEnabled $false -DynamicMemory -MemoryMaximumBytes 4GB
+        Set-VM -Name $vmName -ProcessorCount 4 -AutomaticCheckpointsEnabled $false -DynamicMemory -MemoryMaximumBytes 8GB
         Add-VMDvdDrive -VMName $vmName -Path "$ISOFileDirectory\$SelectedISOFile"
         Set-VMFirmware -VMName $vmName -EnableSecureBoot On
         Set-VMKeyProtector -VMName $vmName -NewLocalKeyProtector
