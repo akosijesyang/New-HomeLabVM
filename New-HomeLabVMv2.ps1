@@ -200,7 +200,6 @@ switch ($VMOption) {
         Set-VMKeyProtector -VMName $vmName -NewLocalKeyProtector
         Enable-VMTPM -VMName $vmName
         Get-VMIntegrationService -Name "Guest Service Interface" -VMName $vmName | Enable-VMIntegrationService
-        Set-VMFirmware -VMName $vmName -EnableSecureBoot 1
         $InspectBootOrder = Get-VMFirmware -VMName $vmName
         $HddDrive = $InspectBootOrder.BootOrder[0]
         $NetAdapter = $InspectBootOrder.BootOrder[1]
